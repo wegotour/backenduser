@@ -40,19 +40,19 @@ func GCFReturnStruct(DataStuct any) string {
 	return string(jsondata)
 }
 
-func InsertDataProduk(Mongoenv, dbname string, r *http.Request) string {
+func InsertDataTicket(Mongoenv, dbname string, r *http.Request) string {
 	resp := new(Credential)
-	produkdata := new(Produk)
+	ticketdata := new(Ticket)
 	resp.Status = false
 	conn := SetConnection(Mongoenv, dbname)
-	err := json.NewDecoder(r.Body).Decode(&produkdata)
+	err := json.NewDecoder(r.Body).Decode(&ticketdata)
 	if err != nil {
 		resp.Message = "error parsing application/json: " + err.Error()
-	} else if produkdata.Nama == "" || produkdata.Harga == "" || produkdata.Deskripsi == "" || produkdata.Stok == "" {
+	} else if ticketdata.Nama == "" || ticketdata.Harga == "" || ticketdata.Deskripsi == "" || ticketdata.Stok == "" {
 		resp.Message = "Data Tidak Boleh Kosong"
 	} else {
 		resp.Status = true
-		insertedID, err := InsertProduk(conn, "produk", *produkdata)
+		insertedID, err := InsertTicket(conn, "ticket", *ticketdata)
 		if err != nil {
 			resp.Message = "Gagal memasukkan data ke database: " + err.Error()
 		} else {
@@ -84,7 +84,7 @@ func InsertDataTransaksi(Mongoenv, dbname string, r *http.Request) string {
 
 func GetAllData(MONGOCONNSTRINGENV, dbname, collectionname string) string {
 	mconn := SetConnection(MONGOCONNSTRINGENV, dbname)
-	data := GetAllDataProduk(mconn, collectionname)
+	data := GetAllDataTicket(mconn, collectionname)
 	return GCFReturnStruct(data)
 }
 
@@ -94,9 +94,9 @@ func GetDataTransaksi(MONGOCONNSTRINGENV, dbname, collectionname string) string 
 	return GCFReturnStruct(data)
 }
 
-func UpdateDataProduk(Mongoenv, dbname string, r *http.Request) string {
+func UpdateDataTicket(Mongoenv, dbname string, r *http.Request) string {
 	resp := new(Credential)
-	produkdata := new(Produk)
+	ticketdata := new(Ticket)
 	resp.Status = false
 	conn := SetConnection(Mongoenv, dbname)
 
@@ -112,27 +112,27 @@ func UpdateDataProduk(Mongoenv, dbname string, r *http.Request) string {
 		return GCFReturnStruct(resp)
 	}
 
-	produkdata.ID = ID
+	ticketdata.ID = ID
 
-	err = json.NewDecoder(r.Body).Decode(&produkdata)
+	err = json.NewDecoder(r.Body).Decode(&ticketdata)
 
 	if err != nil {
 		resp.Message = "error parsing application/json: " + err.Error()
 	} else {
 		resp.Status = true
-		produks, status, err := UpdateProduk(conn, "produk", *produkdata)
+		tickets, status, err := UpdateTicket(conn, "ticket", *ticketdata)
 		if err != nil || !status {
 			resp.Message = "Gagal update data : " + err.Error()
 		} else {
-			resp.Message = "Berhasil Update data dengan ID: " + produks.ID.Hex()
+			resp.Message = "Berhasil Update data dengan ID: " + tickets.ID.Hex()
 		}
 	}
 	return GCFReturnStruct(resp)
 }
 
-func DeleteDataProduk(Mongoenv, dbname string, r *http.Request) string {
+func DeleteDataTicket(Mongoenv, dbname string, r *http.Request) string {
 	resp := new(Credential)
-	produkdata := new(Produk)
+	ticketdata := new(Ticket)
 	resp.Status = false
 	conn := SetConnection(Mongoenv, dbname)
 
@@ -148,30 +148,30 @@ func DeleteDataProduk(Mongoenv, dbname string, r *http.Request) string {
 		return GCFReturnStruct(resp)
 	}
 
-	produkdata.ID = ID
+	ticketdata.ID = ID
 
-	// err = json.NewDecoder(r.Body).Decode(&produkdata)
+	// err = json.NewDecoder(r.Body).Decode(&ticketdata)
 	// if err != nil {
 	// 	resp.Message = "error parsing application/json: " + err.Error()
 	// } else {
 
 	resp.Status = true
-	status, err := DeleteProduk(conn, "produk", produkdata.ID)
+	status, err := DeleteTicket(conn, "ticket", ticketdata.ID)
 	if err != nil || !status {
 		resp.Message = "Gagal Delete data : " + err.Error()
 	} else {
-		resp.Message = "Berhasil Delete Data Produk"
+		resp.Message = "Berhasil Delete Data Ticket"
 	}
 
 	return GCFReturnStruct(resp)
 }
 
-func GetOneDataProduk(MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+func GetOneDataTicket(MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	mconn := SetConnection(MONGOCONNSTRINGENV, dbname)
 	resp := new(Credential)
-	produkdata := new(Produk)
+	ticketdata := new(Ticket)
 	resp.Status = false
-	err := json.NewDecoder(r.Body).Decode(&produkdata)
+	err := json.NewDecoder(r.Body).Decode(&ticketdata)
 
 	id := r.URL.Query().Get("_id")
 	if id == "" {
@@ -185,10 +185,10 @@ func GetOneDataProduk(MONGOCONNSTRINGENV, dbname, collectionname string, r *http
 		return GCFReturnStruct(resp)
 	}
 
-	produkdata.ID = ID
+	ticketdata.ID = ID
 
-	// Menggunakan fungsi GetProdukFromID untuk mendapatkan data produk berdasarkan ID
-	produkdata, err = GetProdukFromID(mconn, collectionname, ID)
+	// Menggunakan fungsi GetTicketFromID untuk mendapatkan data ticket berdasarkan ID
+	ticketdata, err = GetTicketFromID(mconn, collectionname, ID)
 	if err != nil {
 		resp.Message = err.Error()
 		return GCFReturnStruct(resp)
@@ -196,7 +196,7 @@ func GetOneDataProduk(MONGOCONNSTRINGENV, dbname, collectionname string, r *http
 
 	resp.Status = true
 	resp.Message = "Get Data Berhasil"
-	resp.Data = []Produk{*produkdata}
+	resp.Data = []Ticket{*ticketdata}
 
 	return GCFReturnStruct(resp)
 }

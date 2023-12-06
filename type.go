@@ -13,10 +13,10 @@ type Credential struct {
 	Status  bool     `json:"status" bson:"status"`
 	Token   string   `json:"token,omitempty" bson:"token,omitempty"`
 	Message string   `json:"message,omitempty" bson:"message,omitempty"`
-	Data    []Produk `bson:"data,omitempty" json:"data,omitempty"`
+	Data    []Ticket `bson:"data,omitempty" json:"data,omitempty"`
 }
 
-type Produk struct {
+type Ticket struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
 	Nama      string             `bson:"nama,omitempty" json:"nama,omitempty"`
 	Harga     string             `bson:"harga,omitempty" json:"harga,omitempty"`
@@ -26,7 +26,7 @@ type Produk struct {
 
 type Transaksi struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
-	NamaProduk  string             `bson:"namaproduk,omitempty" json:"namaproduk,omitempty"`
+	NamaTicket  string             `bson:"namaticket,omitempty" json:"namaticket,omitempty"`
 	Harga       string             `bson:"harga,omitempty" json:"harga,omitempty"`
 	NamaPembeli string             `bson:"namapembeli,omitempty" json:"namapembeli,omitempty"`
 	Email       string             `bson:"email,omitempty" json:"email,omitempty"`
