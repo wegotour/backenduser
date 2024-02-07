@@ -14,6 +14,7 @@ type Credential struct {
 	Token   string   `json:"token,omitempty" bson:"token,omitempty"`
 	Message string   `json:"message,omitempty" bson:"message,omitempty"`
 	Data    []Ticket `bson:"data,omitempty" json:"data,omitempty"`
+	DataTransaksi   []Transaksi `bson:"datatransaksi,omitempty" json:"datatransaksi,omitempty"`
 }
 
 type Ticket struct {

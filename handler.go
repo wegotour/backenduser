@@ -130,6 +130,42 @@ func UpdateDataTicket(Mongoenv, dbname string, r *http.Request) string {
 	return GCFReturnStruct(resp)
 }
 
+func UpdateDataTransaksi(Mongoenv, dbname string, r *http.Request) string {
+	resp := new(Credential)
+	transaksidata := new(Transaksi)
+	resp.Status = false
+	conn := SetConnection(Mongoenv, dbname)
+
+	id := r.URL.Query().Get("_id")
+	if id == "" {
+		resp.Message = "Missing '_id' parameter in the URL"
+		return GCFReturnStruct(resp)
+	}
+
+	ID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		resp.Message = "Invalid '_id' parameter in the URL"
+		return GCFReturnStruct(resp)
+	}
+
+	transaksidata.ID = ID
+
+	err = json.NewDecoder(r.Body).Decode(&transaksidata)
+
+	if err != nil {
+		resp.Message = "error parsing application/json: " + err.Error()
+	} else {
+		resp.Status = true
+		transaksis, status, err := UpdateTransaksi(conn, "transaksi", *transaksidata)
+		if err != nil || !status {
+			resp.Message = "Gagal update data : " + err.Error()
+		} else {
+			resp.Message = "Berhasil Update data dengan ID: " + transaksis.ID.Hex()
+		}
+	}
+	return GCFReturnStruct(resp)
+}
+
 func DeleteDataTicket(Mongoenv, dbname string, r *http.Request) string {
 	resp := new(Credential)
 	ticketdata := new(Ticket)
@@ -166,6 +202,42 @@ func DeleteDataTicket(Mongoenv, dbname string, r *http.Request) string {
 	return GCFReturnStruct(resp)
 }
 
+func DeleteDataTransaksi(Mongoenv, dbname string, r *http.Request) string {
+	resp := new(Credential)
+	transaksidata := new(Transaksi)
+	resp.Status = false
+	conn := SetConnection(Mongoenv, dbname)
+
+	id := r.URL.Query().Get("_id")
+	if id == "" {
+		resp.Message = "Missing '_id' parameter in the URL"
+		return GCFReturnStruct(resp)
+	}
+
+	ID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		resp.Message = "Invalid '_id' parameter in the URL"
+		return GCFReturnStruct(resp)
+	}
+
+	transaksidata.ID = ID
+
+	// err = json.NewDecoder(r.Body).Decode(&transaksidata)
+	// if err != nil {
+	// 	resp.Message = "error parsing application/json: " + err.Error()
+	// } else {
+
+	resp.Status = true
+	status, err := DeleteTransaksi(conn, "transaksi", transaksidata.ID)
+	if err != nil || !status {
+		resp.Message = "Gagal Delete data : " + err.Error()
+	} else {
+		resp.Message = "Berhasil Delete Data Transaksi"
+	}
+
+	return GCFReturnStruct(resp)
+}
+
 func GetOneDataTicket(MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
 	mconn := SetConnection(MONGOCONNSTRINGENV, dbname)
 	resp := new(Credential)
@@ -197,6 +269,41 @@ func GetOneDataTicket(MONGOCONNSTRINGENV, dbname, collectionname string, r *http
 	resp.Status = true
 	resp.Message = "Get Data Berhasil"
 	resp.Data = []Ticket{*ticketdata}
+
+	return GCFReturnStruct(resp)
+}
+
+func GetOneDataTransaksi(MONGOCONNSTRINGENV, dbname, collectionname string, r *http.Request) string {
+	mconn := SetConnection(MONGOCONNSTRINGENV, dbname)
+	resp := new(Credential)
+	transaksidata := new(Transaksi)
+	resp.Status = false
+	err := json.NewDecoder(r.Body).Decode(&transaksidata)
+
+	id := r.URL.Query().Get("_id")
+	if id == "" {
+		resp.Message = "Missing '_id' parameter in the URL"
+		return GCFReturnStruct(resp)
+	}
+
+	ID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		resp.Message = "Invalid '_id' parameter in the URL"
+		return GCFReturnStruct(resp)
+	}
+
+	transaksidata.ID = ID
+
+	// Menggunakan fungsi GetTicketFromID untuk mendapatkan data ticket berdasarkan ID
+	transaksidata, err = GetTransaksiFromID(mconn, collectionname, ID)
+	if err != nil {
+		resp.Message = err.Error()
+		return GCFReturnStruct(resp)
+	}
+
+	resp.Status = true
+	resp.Message = "Get Data Berhasil"
+	resp.DataTransaksi = []Transaksi{*transaksidata}
 
 	return GCFReturnStruct(resp)
 }
