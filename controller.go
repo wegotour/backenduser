@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// docs
 func InsertOneDoc(db *mongo.Database, col string, docs interface{}) (insertedID primitive.ObjectID, err error) {
 	cols := db.Collection(col)
 	result, err := cols.InsertOne(context.Background(), docs)
@@ -61,7 +62,14 @@ func DeleteOneDoc(db *mongo.Database, col string, filter bson.M) (err error) {
 	return
 }
 
-// User
+// insert
+func InsertUser(db *mongo.Database, collection string, userdata User) string {
+	hash, _ := HashPassword(userdata.Password)
+	userdata.Password = hash
+	atdb.InsertOneDoc(db, collection, userdata)
+	return "Username : " + userdata.Username + "\nPassword : " + userdata.Password
+}
+
 func InsertTicket(db *mongo.Database, col string, ticketdata Ticket) (insertedID primitive.ObjectID, err error) {
 	insertedID, err = InsertOneDoc(db, col, ticketdata)
 	if err != nil {
@@ -90,6 +98,23 @@ func InsertTransaksi(db *mongo.Database, col string, transaksidata Transaksi) (i
 	return insertedID, err
 }
 
+func InsertPesanReview(db *mongo.Database, col string, pesandata Pesan) (insertedID primitive.ObjectID, err error) {
+	objectid := primitive.NewObjectID()
+	data := bson.M{
+		"_id":    objectid,
+		"nama":   pesandata.Nama,
+		"subjek": pesandata.Subjek,
+		"pesan":  pesandata.Pesan,
+	}
+	insertedID, err = InsertOneDoc(db, col, data)
+	if err != nil {
+		fmt.Printf("InsertUser: %v\n", err)
+	}
+	return insertedID, err
+}
+
+
+// get
 func GetAllDataTicket(db *mongo.Database, col string) (ticketlist []Ticket) {
 	cols := db.Collection(col)
 	filter := bson.M{}
@@ -118,13 +143,55 @@ func GetAllDataTransaksi(db *mongo.Database, col string) (transaksilist []Transa
 	return transaksilist
 }
 
-func InsertUser(db *mongo.Database, collection string, userdata User) string {
-	hash, _ := HashPassword(userdata.Password)
-	userdata.Password = hash
-	atdb.InsertOneDoc(db, collection, userdata)
-	return "Username : " + userdata.Username + "\nPassword : " + userdata.Password
+func GetAllDataReview(db *mongo.Database, col string) (pesanlist []Pesan) {
+	cols := db.Collection(col)
+	filter := bson.M{}
+	cursor, err := cols.Find(context.TODO(), filter)
+	if err != nil {
+		fmt.Println("Error GetAllDocs in colection", col, ":", err)
+	}
+	err = cursor.All(context.TODO(), &pesanlist)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return pesanlist
 }
 
+func GetTicketFromID(db *mongo.Database, col string, _id primitive.ObjectID) (*Ticket, error) {
+	cols := db.Collection(col)
+	filter := bson.M{"_id": _id}
+
+	ticketlist := new(Ticket)
+
+	err := cols.FindOne(context.Background(), filter).Decode(ticketlist)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, fmt.Errorf("no data found for ID %s", _id.Hex())
+		}
+		return nil, fmt.Errorf("error retrieving data for ID %s: %s", _id.Hex(), err.Error())
+	}
+
+	return ticketlist, nil
+}
+
+func GetTransaksiFromID(db *mongo.Database, col string, _id primitive.ObjectID) (*Transaksi, error) {
+	cols := db.Collection(col)
+	filter := bson.M{"_id": _id}
+
+	transaksilist := new(Transaksi)
+
+	err := cols.FindOne(context.Background(), filter).Decode(transaksilist)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, fmt.Errorf("no data found for ID %s", _id.Hex())
+		}
+		return nil, fmt.Errorf("error retrieving data for ID %s: %s", _id.Hex(), err.Error())
+	}
+
+	return transaksilist, nil
+}
+
+// update
 func UpdateTicket(db *mongo.Database, col string, ticket Ticket) (tickets Ticket, status bool, err error) {
 	cols := db.Collection(col)
 	filter := bson.M{"_id": ticket.ID}
@@ -187,6 +254,7 @@ func UpdateTransaksi(db *mongo.Database, col string, transaksi Transaksi) (trans
 	return transaksis, true, nil
 }
 
+// delete
 func DeleteTicket(db *mongo.Database, col string, _id primitive.ObjectID) (status bool, err error) {
 	cols := db.Collection(col)
 	filter := bson.M{"_id": _id}
@@ -213,38 +281,4 @@ func DeleteTransaksi(db *mongo.Database, col string, _id primitive.ObjectID) (st
 		return false, err
 	}
 	return true, nil
-}
-
-func GetTicketFromID(db *mongo.Database, col string, _id primitive.ObjectID) (*Ticket, error) {
-	cols := db.Collection(col)
-	filter := bson.M{"_id": _id}
-
-	ticketlist := new(Ticket)
-
-	err := cols.FindOne(context.Background(), filter).Decode(ticketlist)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, fmt.Errorf("no data found for ID %s", _id.Hex())
-		}
-		return nil, fmt.Errorf("error retrieving data for ID %s: %s", _id.Hex(), err.Error())
-	}
-
-	return ticketlist, nil
-}
-
-func GetTransaksiFromID(db *mongo.Database, col string, _id primitive.ObjectID) (*Transaksi, error) {
-	cols := db.Collection(col)
-	filter := bson.M{"_id": _id}
-
-	transaksilist := new(Transaksi)
-
-	err := cols.FindOne(context.Background(), filter).Decode(transaksilist)
-	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, fmt.Errorf("no data found for ID %s", _id.Hex())
-		}
-		return nil, fmt.Errorf("error retrieving data for ID %s: %s", _id.Hex(), err.Error())
-	}
-
-	return transaksilist, nil
 }

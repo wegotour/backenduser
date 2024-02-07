@@ -36,3 +36,10 @@ type Transaksi struct {
 	Quantity    string             `bson:"quantity,omitempty" json:"quantity,omitempty"`
 	Total       string             `bson:"total,omitempty" json:"total,omitempty"`
 }
+
+type Pesan struct {
+	ID     primitive.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
+	Nama   string             `bson:"nama,omitempty" json:"nama,omitempty"`
+	Subjek string             `bson:"subjek,omitempty" json:"subjek,omitempty"`
+	Pesan  string             `bson:"pesan,omitempty" json:"pesan,omitempty"`
+}
